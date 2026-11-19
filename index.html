@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Gagnvirkur þrívíður hnöttur um útbreiðslu mænusóttarveiru, byggður á upplýsingum frá WHO.">
+<title>Útbreiðsla mænusóttar</title>
+<style>
+:root{
+  --wine:#632b36; --wine-dark:#4d202b; --paper:#f4f1eb; --ink:#282321;
+  --muted:#6e625d; --line:#c9bdb3; --red:#a8323e; --cyan:#477f83; --gold:#b17a32;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;background:var(--paper);color:var(--ink);
+  font-family:Georgia,"Courier New",serif;overflow:hidden}
+body{background:linear-gradient(135deg,#f7f5f0 0%,#eee9e1 100%)}
+#app{height:100%;display:grid;grid-template-rows:58px 1fr 34px;position:relative;isolation:isolate}
+header{z-index:3;padding:0 34px;display:flex;align-items:center;justify-content:space-between;
+  color:#fff;background:var(--wine);box-shadow:0 3px 12px #32151c22}
+.brand{display:flex;align-items:center;gap:13px}
+.sigil{width:29px;height:29px;border:1px solid #e7cbd0;border-radius:50%;display:grid;
+  place-items:center;color:#f2dfe1;font-size:18px}
+h1{font-size:15px;letter-spacing:3px;margin:0;font-weight:700}
+.subbrand{font:10px/1.3 "Courier New",monospace;color:#ead9d9;letter-spacing:1.5px;margin-top:3px}
+.status{font:10px "Courier New",monospace;letter-spacing:1px;color:#f2e6e4;
+  border:1px solid #c99da4;padding:7px 10px}
+main{min-height:0;display:grid;grid-template-columns:minmax(270px,.83fr) minmax(0,1.45fr);
+  gap:36px;padding:35px 5.2vw 27px;align-items:stretch}
+#side{min-height:0;overflow:auto;padding:5px 8px 8px 0;display:flex;flex-direction:column;gap:20px}
+.panel{padding:0 0 17px;border-bottom:1px solid var(--line);background:transparent}
+.eyebrow{font:10px "Courier New",monospace;color:var(--wine);letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:10px}
+.panel h2{font: bold 17px Georgia,serif;margin:0 0 9px;color:#33282a}
+.panel p{font:12px/1.7 "Courier New",monospace;color:#514945;margin:0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}
+.stat{padding:10px 11px;border-left:3px solid var(--wine);background:#e9e2da}
+.stat strong{display:block;font: bold 24px Georgia,serif;color:var(--wine)}
+.stat span{font:10px/1.4 "Courier New",monospace;color:#655a54;display:block;margin-top:3px}
+.timeline{display:flex;gap:7px;margin-top:12px}
+.year{flex:1;background:#eee8e0;color:#554743;border:1px solid #c9b9ae;padding:8px 3px;
+  cursor:pointer;font: bold 11px "Courier New",monospace;transition:.2s}
+.year:hover,.year.active{background:var(--wine);color:#fff;border-color:var(--wine)}
+#year-title{color:var(--wine);font: bold 12px "Courier New",monospace;margin-bottom:7px}
+.note{font-size:10px!important;color:#766b64!important;margin-top:9px!important}
+#globe-wrap{position:relative;min-height:390px;overflow:visible;background:#e9e4dc;
+  border:10px solid #fff;outline:1px solid #cbbfb4;box-shadow:0 9px 24px #3c28251c;
+  margin:19px 8px 12px 18px}
+#globe-wrap:before,#globe-wrap:after{content:"";position:absolute;z-index:4;top:-55px;height:55px;
+  width:1px;background:#8b7b72}
+#globe-wrap:before{left:18%}#globe-wrap:after{right:18%}
+#globeViz{position:absolute;inset:0}
+.globe-label{position:absolute;z-index:2;top:13px;left:15px;color:#5c4a45;
+  font:10px "Courier New",monospace;letter-spacing:1.5px;pointer-events:none;
+  background:#f4f1ebd9;padding:6px 8px}
+.legend{position:absolute;left:13px;bottom:13px;z-index:2;display:flex;flex-wrap:wrap;gap:10px;
+  font:9px "Courier New",monospace;color:#463b37;background:#f7f4eee8;padding:8px 10px;
+  border:1px solid #c8bcb1}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
+.red{background:var(--red)}.cyan{background:var(--cyan)}.gold{background:var(--gold)}
+footer{z-index:3;border-top:1px solid #cbbfb4;padding:8px 5.2vw;display:flex;
+  justify-content:space-between;gap:15px;color:#766b64;font:9px "Courier New",monospace;
+  background:#eee9e1}
+#loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--wine);
+  font:11px "Courier New",monospace;letter-spacing:2px;background:#eee9e1;z-index:5;transition:opacity .6s}
+.pulse{animation:pulse 1.5s infinite}@keyframes pulse{50%{opacity:.35}}
+/* Vein-like tendrils drift over the slide as a subtle visual motif. */
+.veins{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;opacity:.22}
+.veins svg{width:100%;height:100%}
+.veins path{fill:none;stroke:#9e303b;stroke-width:1.5;stroke-linecap:round;
+  stroke-dasharray:5 8;animation:veinFlow 13s linear infinite}
+.veins path:nth-child(2){animation-duration:18s;stroke-width:2}
+.veins path:nth-child(3){animation-duration:22s;stroke-width:1}
+@keyframes veinFlow{to{stroke-dashoffset:-260}}
+@media(max-width:850px){
+ html,body{overflow:auto}#app{min-height:100%;height:auto;grid-template-rows:58px auto auto}
+ main{grid-template-columns:1fr;padding:22px 18px;gap:14px}
+ #globe-wrap{height:55vh;min-height:330px;margin:42px 8px 12px}
+ #side{overflow:visible}footer{flex-direction:column;padding:10px 18px}
+ header{padding:0 15px}.status{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="veins" aria-hidden="true"><svg viewBox="0 0 1200 800" preserveAspectRatio="none">
+<path d="M-40 210 C130 180 130 300 250 260 S390 170 470 240 S590 360 700 300 S850 180 940 230 S1080 340 1240 270"/>
+<path d="M-30 590 C110 500 180 650 290 570 S430 440 520 520 S650 700 770 610 S930 470 1030 550 S1150 650 1240 580"/>
+<path d="M160 -30 C210 100 120 140 210 250 S350 350 310 470 S210 650 300 830"/>
+</svg></div>
+<header>
+ <div class="brand"><div class="sigil">✣</div><div><h1>MÆNUSÓTT</h1><div class="subbrand">ÚTBREIÐSLA VEIRUNNAR : GAGNVIRK KORTASJÓN</div></div></div>
+ <div class="status">SKÓLAVERKEFNI · MÆNUSÓTT</div>
+</header>
+<main>
+ <section id="globe-wrap">
+  <div class="globe-label">SVÆÐI // ÞRÍVÍTT ÚTBREIÐSLUKORT</div>
+  <div id="globeViz"></div>
+  <div class="legend"><span><i class="dot red"></i>Virkt smit villiveiru (WPV1)</span><span><i class="dot cyan"></i>Staðsetning / eftirlit</span><span><i class="dot gold"></i>Skráð tenging</span></div>
+  <div id="loading"><span class="pulse">HLEÐ 3D HNÖTTINN…</span></div>
+ </section>
+ <aside id="side">
+  <section class="panel">
+   <div class="eyebrow">SVÆÐI · YFIRLIT</div>
+   <h2>Hvar finnst villta mænusóttarveiran?</h2>
+   <p>Samkvæmt WHO er villta mænusóttarveiran af gerð 1 (WPV1) enn landlæg í Afganistan og Pakistan. Löndin tvö mynda eitt faraldsfræðilegt svæði vegna smita yfir landamærin.</p>
+   <div class="stats">
+    <div class="stat"><strong>2</strong><span>Lönd þar sem WPV1 er enn landlæg</span></div>
+    <div class="stat"><strong>29</strong><span>Skráð WPV1-tilfelli árið 2026 (til 13. nóv.)</span></div>
+   </div>
+  </section>
+  <section class="panel">
+   <div class="eyebrow">Tímalína</div>
+   <div id="year-title">2026  Síðustu smitstaðirnir</div>
+   <p id="year-desc">Smit villiveiru greinist enn í Afganistan og Pakistan. WHO greindi frá 29 tilfellum árið 2026 fram til 13. nóvember.</p>
+   <div class="timeline">
+    <button class="year" data-year="1988">1988</button><button class="year" data-year="2024">2024</button><button class="year" data-year="2025">2025</button><button class="year active" data-year="2026">2026</button>
+   </div>
+   <p class="note">Veldu ár til að sjá hvernig áherslusvæði kortsins breytast. Bognu línurnar sýna skýringardæmi um þekktar tengingar, ekki nákvæma leið hvers smits.</p>
+  </section>
+  <section class="panel">
+   <div class="eyebrow">Um sjúkdóminn</div>
+   <h2>Hvernig berst mænusótt?</h2>
+   <p>Veiran berst aðallega með saur-munn smitleið: til dæmis þegar mengað vatn eða matur berst í munn. Hún fjölgar sér í þörmum og getur í sumum tilvikum ráðist á taugakerfið og valdið lömun.</p>
+  </section>
+  <section class="panel">
+   <div class="eyebrow">Vörn</div>
+   <h2>Bólusetning skiptir máli</h2>
+   <p>Engin sértæk lækning er til við mænusótt, en bólusetning verndar gegn sjúkdómnum. Hátt bólusetningarhlutfall og gott eftirlit hjálpa til við að stöðva útbreiðslu.</p>
+  </section>
+ </aside>
+</main>
+<footer><span>SKÓLAVERKEFNI : UPPLÝSINGAR Á ÍSLENSKU</span><span>Heimildir: WHO : Global Polio Eradication Initiative : uppfært eftir gögnum frá nóvember 2026</span></footer>
+</div>
+<script src="https://unpkg.com/globe.gl"></script>
+<script>
+const red='#ff4b5e', cyan='#46d9e8', gold='#ffc857';
+const places={
+ af:{name:'Afganistan',lat:33.94,lng:67.71},
+ pk:{name:'Pakistan',lat:30.38,lng:69.35},
+ hamb:{name:'Hamborg, Þýskaland',lat:53.55,lng:9.99},
+ is:{name:'Ísland',lat:64.96,lng:-19.02},
+ lag:{name:'Austur-Afganistan',lat:34.5,lng:70.5},
+ kp:{name:'Khyber Pakhtunkhwa, Pakistan',lat:34.0,lng:71.5},
+ kar:{name:'Karachi, Pakistan',lat:24.86,lng:67.01},
+ que:{name:'Quetta, Pakistan',lat:30.18,lng:66.99},
+ kand:{name:'Kandahar, Afganistan',lat:31.63,lng:65.71}
+};
+const arc=(a,b,color=red,alt=.16)=>({startLat:a.lat,startLng:a.lng,endLat:b.lat,endLng:b.lng,color,altitude:alt});
+const marker=(p,color=red,r=.48)=>({...p,color,radius:r});
+const globe=Globe()(document.getElementById('globeViz'))
+ .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
+ .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+ .backgroundColor('rgba(0,0,0,0)')
+ .showAtmosphere(true).atmosphereColor('#287eaa').atmosphereAltitude(.18)
+ .pointsData([]).pointLat('lat').pointLng('lng').pointColor('color').pointRadius('radius').pointAltitude(.012).pointsMerge(false)
+ .pointLabel(d=>`<div style="background:#07111e;border:1px solid ${d.color};padding:7px 9px;color:#eaf5ff;font:12px Arial">${d.name}</div>`)
+ .arcsData([]).arcStartLat('startLat').arcStartLng('startLng').arcEndLat('endLat').arcEndLng('endLng')
+ .arcColor('color').arcAltitude('altitude').arcStroke(1.1).arcDashLength(.45).arcDashGap(.25).arcDashAnimateTime(2200)
+ .ringsData([]).ringLat('lat').ringLng('lng').ringColor('color').ringMaxRadius('maxR').ringPropagationSpeed(1.6).ringRepeatPeriod(1000);
+function resize(){globe.width(document.getElementById('globe-wrap').clientWidth).height(document.getElementById('globe-wrap').clientHeight)}
+window.addEventListener('resize',resize);resize();
+globe.pointOfView({lat:30,lng:55,altitude:2.35},0);
+globe.controls().autoRotate=true;globe.controls().autoRotateSpeed=.32;
+const years={
+ 1988:{title:'1988  Útbreiðsla um heim allan',desc:'Þegar alþjóðlegt útrýmingarátak hófst voru um 350.000 tilfelli villtrar mænusóttar á ári í yfir 125 löndum. Kortið sýnir víðtæka sögulega útbreiðslu á grófan hátt.',points:[[-5,20],[10,0],[25,45],[35,100],[5,105],[40,-5],[-20,-60],[50,80]],arcs:[]},
+ 2024:{title:'2024  Viðvarandi smit',desc:'WHO skráði 99 tilfelli WPV1 árið 2024: 25 í Afganistan og 74 í Pakistan. Smitgreiningar komu meðal annars fram í Khyber Pakhtunkhwa, Sindh og suðurhluta Afganistans.',points:[places.af,places.pk,places.kp,places.kar,places.que,places.kand],arcs:[arc(places.af,places.pk),arc(places.kp,places.que),arc(places.que,places.kar)]},
+ 2025:{title:'2025  Tenging greind til Þýskalands',desc:'Árið 2025 voru 52 tilfelli WPV1 skráð í Afganistan og Pakistan. Erfðagreining tengdi veiru sem fannst í frárennslissýni í Hamborg við veiru sem hafði áður greinst í Kandahar í Afganistan.',points:[places.af,places.pk,places.kp,places.kar,places.que,places.kand,places.hamb],arcs:[arc(places.af,places.pk),arc(places.kand,places.hamb,gold,.22),arc(places.kp,places.que)]},
+ 2026:{title:'2026  Síðustu smitstaðirnir',desc:'Smit villiveiru greinist enn í Afganistan og Pakistan. WHO greindi frá 29 tilfellum árið 2026 fram til 13. nóvember. Átakið beinist að því að stöðva smit í þessum tveimur löndum.',points:[places.af,places.pk,places.lag,places.kp,places.kar,places.que,places.kand],arcs:[arc(places.af,places.pk),arc(places.lag,places.kp),arc(places.kp,places.que),arc(places.que,places.kar)]}
+};
+function showYear(y){
+ const d=years[y];document.getElementById('year-title').textContent=d.title;document.getElementById('year-desc').textContent=d.desc;
+ document.querySelectorAll('.year').forEach(b=>b.classList.toggle('active',b.dataset.year===String(y)));
+ const pts=d.points.map(p=>Array.isArray(p)?{lat:p[0],lng:p[1],name:'Sögulegt áherslusvæði',color:red,radius:.35}:marker(p, p===places.hamb?gold:red,p===places.hamb?.55:.5));
+ globe.pointsData(pts).arcsData(d.arcs);
+ globe.ringsData(pts.filter(p=>p.color===red).map(p=>({lat:p.lat,lng:p.lng,color:p.color,maxR:2.5})));
+ if(y==='1988')globe.pointOfView({lat:18,lng:20,altitude:2.5},900);
+ else globe.pointOfView({lat:31,lng:55,altitude:2.1},900);
+}
+document.querySelectorAll('.year').forEach(b=>b.addEventListener('click',()=>showYear(b.dataset.year)));
+showYear('2026');
+setTimeout(()=>{const l=document.getElementById('loading');l.style.opacity='0';setTimeout(()=>l.remove(),700)},1200);
+</script>
+</body>
+</html>
