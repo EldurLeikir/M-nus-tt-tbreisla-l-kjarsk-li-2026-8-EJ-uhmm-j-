@@ -84,6 +84,7 @@ button.big:hover{transform:scale(1.07)}
  <div class="eyebrow">Veldu leikjaham</div>
  <h2>Hvað veistu um mænusótt?</h2>
  <p>Rétt svar gefur 100+ Eldur-tákn og hverju réttu svari í röð fylgir 100 í viðbót. Rangt svar tekur tákn af þér. 5 rétt í röð gefur STREAK!</p>
+ <p>Fjöldi spurninga: <b id="numV">10</b> <input type="range" id="num" min="5" max="30" value="10" style="vertical-align:middle" oninput="$('numV').textContent=this.value"><br><small>Öfgar: alltaf 10 spurningar.</small></p>
  <div class="modes">
   <button class="mode" data-m="normal"><b>1 · Venjulegt</b><span>4 svarmöguleikar. Engin tímamörk.<br>Tákn x1</span></button>
   <button class="mode" data-m="timer"><b>2 · Tímaþraut</b><span>10 mínútur. Hvert rangt svar tekur 30 sek.<br>Tákn x2</span></button>
@@ -129,7 +130,27 @@ const Q=[
  {q:'Hvaða ár hófst alþjóðlegt útrýmingarátak gegn mænusótt?',a:'1988',w:['1958','1978','1998']},
  {q:'Hvaða gerð villtrar mænusóttarveiru er enn á kreiki?',a:'Gerð 1 (WPV1)',w:['Gerð 2','Gerð 3','Gerð 4']},
  {q:'Hvar í líkamanum fjölgar veiran sér?',a:'Í þörmum',w:['Í lungum','Í nýrum','Í húðinni']},
- {q:'Hvaða stofnun leiðir útrýmingarátakið gegn mænusótt?',a:'WHO (Alþjóðaheilbrigðismálastofnunin)',w:['UNESCO','FIFA','NASA']}
+ {q:'Hvaða stofnun leiðir útrýmingarátakið gegn mænusótt?',a:'WHO (Alþjóðaheilbrigðismálastofnunin)',w:['UNESCO','FIFA','NASA']},
+ {q:'Hvaða forseti Bandaríkjanna var lamaður af völdum sjúkdóms sem talinn var mænusótt?',a:'Franklin D. Roosevelt',w:['Harry S. Truman','John F. Kennedy','Dwight D. Eisenhower']},
+ {q:'Hver þróaði munnbóluefni gegn mænusótt?',a:'Albert Sabin',w:['Robert Koch','Louis Pasteur','Marie Curie']},
+ {q:'Hvað hét tækið sem hjálpaði lömuðum sjúklingum að anda á 20. öld?',a:'Járnlunga',w:['Hjartagangráður','Blóðskilunarvél','Öndunargríma']},
+ {q:'Hversu margir af þeim sem smitast af villtri mænusótt lamast?',a:'Um 1 af hverjum 200',w:['Um 1 af hverjum 2','Um 1 af hverjum 10','Um 1 af hverjum 10.000']},
+ {q:'Hversu margar gerðir villtrar mænusóttarveiru voru til?',a:'Þrjár',w:['Tvær','Fimm','Sjö']},
+ {q:'Hvaða gerð villtrar mænusóttarveiru var lýst útrýmt árið 2015?',a:'Gerð 2',w:['Gerð 1','Gerð 5','Gerð 7']},
+ {q:'Hvaða ár var villtri mænusóttarveiru af gerð 3 lýst útrýmt?',a:'2019',w:['2009','2015','2021']},
+ {q:'Hvaða heimsálfa var lýst laus við villta mænusótt árið 2020?',a:'Afríka',w:['Asía','Suður-Ameríka','Ástralía']},
+ {q:'Hvaða ár var Evrópa vottuð laus við mænusótt?',a:'2002',w:['1972','1988','2012']},
+ {q:'Orðið „polio“ kemur úr grísku. Hvað merkir það?',a:'Grár',w:['Rauður','Bein','Vöðvi']},
+ {q:'Hvaða hluta líkamans ræðst mænusóttarveiran á í alvarlegum tilvikum?',a:'Mænuna',w:['Heilabörkinn','Sjóntaugina','Heyrnartaugina']},
+ {q:'Hvaða aldurshópur lamast oftast af mænusótt?',a:'Börn yngri en 5 ára',w:['Unglingar','Fullorðnir','Aldraðir']},
+ {q:'Hvaða dagur er alþjóðlegi mænusóttardagurinn?',a:'24. október',w:['1. janúar','7. apríl','1. desember']},
+ {q:'Hvaða alþjóðleg samtök eru meðal stofnaðila átaksins til að útrýma mænusótt (GPEI)?',a:'Rotary International',w:['Greenpeace','FIFA','Nóbelsstofnunin']},
+ {q:'Hvað kallast heilkennið sem getur komið fram áratugum eftir að fólk hefur fengið mænusótt?',a:'Eftirmænusóttarheilkenni',w:['Parkinsonsveiki','Astmi','Sykursýki']},
+ {q:'Hvað er skoðað til að finna mænusóttarveiru í samfélagi án þess að prófa fólk?',a:'Frárennslisvatn',w:['Loft','Snjór','Matvæli']},
+ {q:'Hversu mörg tilfelli villtrar mænusóttar (WPV1) skráði WHO árið 2024?',a:'99',w:['9','350.000','1.200']},
+ {q:'Hvernig er bóluefni Salks (IPV) gefið?',a:'Með sprautu',w:['Sem nefúði','Sem munnsogstafla','Með plástri']},
+ {q:'Hvað kallast það þegar nógu margir eru bólusettir til að vernda þá sem eru óbólusettir?',a:'Hjarðónæmi',w:['Sóttkví','Einangrun','Hópsýking']},
+ {q:'Um hve mikið hafa tilfelli mænusóttar minnkað á heimsvísu frá 1988?',a:'Um meira en 99%',w:['Um 10%','Um 25%','Um 50%']}
 ];
 const MODES={
  normal:{mult:1,time:0,n:4},
@@ -195,7 +216,7 @@ function usePw(k){
 }
 let S;
 function start(m){
- S={m,cfg:MODES[m],again:false,dbl:false,order:shuf(Q),i:0,cRun:0,wRun:0,level:0,time:MODES[m].time,locked:false,t:null};
+ S={m,cfg:MODES[m],again:false,dbl:false,order:shuf(Q).slice(0,m==='extreme'?10:+$('num').value),i:0,cRun:0,wRun:0,level:0,time:MODES[m].time,locked:false,t:null};
  $('corner').className='';$('corner').textContent='';
  show('game');
  if(S.cfg.time){tick();S.t=setInterval(tick,1000)}else{$('timer').textContent='∞'}
@@ -213,7 +234,7 @@ function render(){
  $('count').innerHTML='<small>Spurning</small>'+(S.i+1)+' / '+S.order.length;
  let opts=q.w.slice();
  if(S.cfg.n===8){ // bætum við 4 röngum svörum úr öðrum spurningum
-  opts=opts.concat(shuf(Q.filter(x=>x!==q).map(x=>x.a)).slice(0,4));
+  opts=opts.concat(shuf(Q.filter(x=>x!==q).map(x=>x.a).filter(a=>a!==q.a&&!opts.includes(a))).slice(0,4));
  }
  opts=shuf([q.a].concat(opts));
  const box=$('answers');box.innerHTML='';
