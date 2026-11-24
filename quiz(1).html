@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mænusóttarspurningar</title>
+<style>
+:root{--wine:#632b36;--paper:#f4f1eb;--ink:#282321;--line:#c9bdb3;--gold:#ffc857}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:linear-gradient(135deg,#f7f5f0,#eee9e1);color:var(--ink);font-family:Georgia,serif}
+header{height:58px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;color:#fff;background:var(--wine);box-shadow:0 3px 12px #32151c22}
+h1{font-size:15px;letter-spacing:3px;margin:0}
+.sub{font:10px "Courier New",monospace;letter-spacing:1.5px;color:#ead9d9;margin-top:3px}
+.tokens{display:flex;align-items:center;gap:8px;font:bold 16px "Courier New",monospace}
+.tokens img,.tok{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid var(--gold)}
+.tokens.bump{animation:bump .4s}
+@keyframes bump{50%{transform:scale(1.3)}}
+.screen{display:none;padding:28px 5vw;animation:fade .4s}
+.screen.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(14px)}}
+.eyebrow{font:10px "Courier New",monospace;color:var(--wine);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+h2{margin:0 0 10px;font-size:22px;color:#33282a}
+p{font:13px/1.7 "Courier New",monospace;color:#514945;margin:0 0 14px}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:18px}
+.mode{background:#e9e2da;border-left:4px solid var(--wine);padding:16px;cursor:pointer;transition:.2s;text-align:left;font:inherit;border-top:0;border-right:0;border-bottom:0}
+.mode:hover{transform:translateY(-5px) rotate(-.6deg);background:#fff;box-shadow:0 8px 18px #3c28252a}
+.mode b{display:block;font-size:19px;color:var(--wine);margin-bottom:6px}
+.mode span{font:12px/1.6 "Courier New",monospace;color:#514945}
+/* leikur */
+#game{padding:0}
+#qbar{background:#fff;text-align:center;padding:18px 20px;font-size:clamp(18px,3vw,28px);font-weight:bold;border-bottom:3px solid #ddd}
+#mid{display:flex;align-items:center;justify-content:space-around;background:#f0eee9;height:30vh;min-height:150px}
+#timer{width:84px;height:84px;border-radius:50%;background:var(--wine);color:#fff;display:grid;place-items:center;font:bold 20px "Courier New",monospace}
+#timer.low{background:#a8323e;animation:bump .6s infinite}
+#logo{height:100%;max-height:26vh;aspect-ratio:1;border-radius:50%;box-shadow:0 0 30px #ff4b2e66;animation:glow 2s infinite alternate}
+@keyframes glow{to{box-shadow:0 0 50px #ff4b2eaa;transform:scale(1.04)}}
+#count{text-align:center;font:bold 18px "Courier New",monospace}
+#count small{display:block;font-size:11px}
+#answers{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px;height:calc(100vh - 58px - 62px - 30vh - 8px);min-height:240px}
+.ans{border:0;border-radius:4px;color:#fff;font:bold clamp(14px,2vw,22px) Georgia,serif;display:flex;align-items:center;gap:14px;padding:0 20px;cursor:pointer;box-shadow:0 4px #0004;transition:.2s;animation:pop .45s backwards;text-align:left}
+.ans:hover:not(:disabled){filter:brightness(1.15);transform:scale(1.02)}
+.ans i{font-style:normal;font-size:28px}
+.ans.right{outline:5px solid #fff;animation:yes .6s}
+.ans.wrong{animation:shake .45s}
+.ans.dim{opacity:.3}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+@keyframes yes{50%{transform:scale(1.06)}}
+@keyframes shake{25%{transform:translateX(-12px)}75%{transform:translateX(12px)}}
+.c0{background:#e21b3c}.c1{background:#1368ce}.c2{background:#d89e00}.c3{background:#26890c}
+.c4{background:#7b3fa0}.c5{background:#0f8b8d}.c6{background:#e0702b}.c7{background:#c2307a}
+/* streak */
+#corner{position:fixed;top:70px;right:16px;z-index:5;font:bold 20px "Courier New",monospace;color:#3b2a00;background:linear-gradient(135deg,#ffe08a,#e3a008);padding:8px 14px;border-radius:6px;box-shadow:0 0 18px #ffc857aa;opacity:0;pointer-events:none}
+#corner.show{opacity:1;animation:bump .5s}
+#corner.gone{opacity:0;transform:translateY(-30px) scale(.6);transition:.8s}
+#streakFull{position:fixed;inset:0;z-index:20;display:none;place-items:center;background:radial-gradient(circle,#ffd86bcc,#b17a32ee);overflow:hidden}
+#streakFull.on{display:grid;animation:fadeout 3s forwards}
+#streakFull h1{font-size:clamp(60px,16vw,200px);letter-spacing:8px;color:#fff8dc;text-shadow:0 0 30px #fff,0 0 60px #ffb300,0 6px 0 #8a5a00;animation:slam 1s}
+@keyframes slam{0%{transform:scale(5) rotate(-12deg);opacity:0}60%{transform:scale(.9) rotate(2deg);opacity:1}100%{transform:scale(1)}}
+@keyframes fadeout{0%,80%{opacity:1}100%{opacity:0}}
+.float{position:fixed;left:50%;top:40%;z-index:10;font:bold 40px "Courier New",monospace;pointer-events:none;animation:up 1.2s forwards;text-shadow:0 2px 6px #0006}
+.float.g{color:#ffc857}.float.r{color:#ff4b5e}
+@keyframes up{from{transform:translate(-50%,0)}to{transform:translate(-50%,-120px);opacity:0}}
+button.big{font:bold 14px "Courier New",monospace;background:var(--wine);color:#fff;border:0;padding:12px 22px;cursor:pointer;margin-top:10px;transition:.2s}
+button.big:hover{transform:scale(1.07)}
+</style>
+</head>
+<body>
+<header>
+ <div><h1>MÆNUSÓTT · SPURNINGAR</h1><div class="sub">ELDUR LEIKIR</div></div>
+ <div class="tokens" id="tokBox"><img src="eldurleikir.jpg" alt="Eldur"><span id="tok">0</span></div>
+</header>
+<div id="corner"></div>
+<div id="streakFull"><h1>STREAK!</h1></div>
+
+<section id="menu" class="screen on">
+ <div class="eyebrow">Veldu leikjaham</div>
+ <h2>Hvað veistu um mænusótt?</h2>
+ <p>Rétt svar gefur 100+ Eldur-tákn og hverju réttu svari í röð fylgir 100 í viðbót. Rangt svar tekur tákn af þér. 5 rétt í röð gefur STREAK!</p>
+ <div class="modes">
+  <button class="mode" data-m="normal"><b>1 · Venjulegt</b><span>4 svarmöguleikar. Engin tímamörk.<br>Tákn x1</span></button>
+  <button class="mode" data-m="timer"><b>2 · Tímaþraut</b><span>10 mínútur. Hvert rangt svar tekur 30 sek.<br>Tákn x2</span></button>
+  <button class="mode" data-m="extreme"><b>3 · Öfgar</b><span>5 mínútur, 8 svarmöguleikar og eitt líf. Rangt svar eyðir 50% tákna.<br>Tákn x4</span></button>
+ </div>
+</section>
+
+<section id="game" class="screen">
+ <div id="qbar"></div>
+ <div id="mid"><div id="timer">∞</div><img id="logo" src="eldurleikir.jpg" alt=""><div id="count"></div></div>
+ <div id="answers"></div>
+</section>
+
+<section id="end" class="screen">
+ <div class="eyebrow" id="endTag"></div>
+ <h2 id="endTitle"></h2>
+ <p id="endText"></p>
+ <button class="big" onclick="show('menu')">AFTUR Í VALMYND</button>
+</section>
+
+<audio id="correct" src="correct.wav"></audio>
+<audio id="incorrect" src="incorrect.wav"></audio>
+<audio id="streak_lose" src="streak_lose.wav"></audio>
+<audio id="streak_gain" src="streak_gain.wav"></audio>
+
+<script>
+const Q=[
+ {q:'Hvaða veira veldur mænusótt?',a:'Pólíóveira (poliovirus)',w:['Inflúensuveira','Mislingaveira','Kórónaveira']},
+ {q:'Hvernig berst mænusótt aðallega á milli manna?',a:'Saur-munn smitleið',w:['Með moskítóflugum','Með snertingu við dýr','Með blóðgjöf eingöngu']},
+ {q:'Í hvaða löndum er villta mænusóttarveiran enn landlæg?',a:'Afganistan og Pakistan',w:['Indlandi og Kína','Nígeríu og Kongó','Brasilíu og Perú']},
+ {q:'Hvað getur mænusótt valdið í alvarlegum tilvikum?',a:'Lömun',w:['Blindu','Heyrnarleysi','Beinbrotum']},
+ {q:'Hvað verndar gegn mænusótt?',a:'Bólusetning',w:['Sýklalyf','Vítamín','Sólarljós']},
+ {q:'Hver þróaði fyrsta bóluefnið gegn mænusótt (1955)?',a:'Jonas Salk',w:['Louis Pasteur','Edward Jenner','Alexander Fleming']},
+ {q:'Hvaða ár hófst alþjóðlegt útrýmingarátak gegn mænusótt?',a:'1988',w:['1958','1978','1998']},
+ {q:'Hvaða gerð villtrar mænusóttarveiru er enn á kreiki?',a:'Gerð 1 (WPV1)',w:['Gerð 2','Gerð 3','Gerð 4']},
+ {q:'Hvar í líkamanum fjölgar veiran sér?',a:'Í þörmum',w:['Í lungum','Í nýrum','Í húðinni']},
+ {q:'Hvaða stofnun leiðir útrýmingarátakið gegn mænusótt?',a:'WHO (Alþjóðaheilbrigðismálastofnunin)',w:['UNESCO','FIFA','NASA']}
+];
+const MODES={
+ normal:{mult:1,time:0,n:4},
+ timer:{mult:2,time:600,n:4},
+ extreme:{mult:4,time:300,n:8,life:true}
+};
+const SHAPES=['▲','◆','●','■','★','⬟','✚','⬢'];
+const $=id=>document.getElementById(id);
+const shuf=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+let tokens=0;
+try{tokens=parseInt(localStorage.getItem('eldur'))||0}catch(e){}
+function setTokens(v){
+ tokens=Math.max(0,Math.round(v));
+ try{localStorage.setItem('eldur',tokens)}catch(e){}
+ $('tok').textContent=tokens;
+ const b=$('tokBox');b.classList.remove('bump');void b.offsetWidth;b.classList.add('bump');
+}
+$('tok').textContent=tokens;
+function snd(id){const a=$(id);a.currentTime=0;a.play().catch(()=>{})}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id))}
+function floatText(t,cls){const f=document.createElement('div');f.className='float '+cls;f.textContent=t;document.body.appendChild(f);setTimeout(()=>f.remove(),1200)}
+const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+
+let S;
+function start(m){
+ S={m,cfg:MODES[m],order:shuf(Q),i:0,cRun:0,wRun:0,level:0,time:MODES[m].time,locked:false,t:null};
+ $('corner').className='';$('corner').textContent='';
+ show('game');
+ if(S.cfg.time){tick();S.t=setInterval(tick,1000)}else{$('timer').textContent='∞'}
+ render();
+}
+function tick(){
+ $('timer').textContent=fmt(S.time);
+ $('timer').classList.toggle('low',S.time<=30);
+ if(S.time<=0){end(false,'Tíminn rann út!')}
+ else S.time--;
+}
+function render(){
+ const q=S.order[S.i];
+ $('qbar').textContent=q.q;
+ $('count').innerHTML='<small>Spurning</small>'+(S.i+1)+' / '+S.order.length;
+ let opts=q.w.slice();
+ if(S.cfg.n===8){ // bætum við 4 röngum svörum úr öðrum spurningum
+  opts=opts.concat(shuf(Q.filter(x=>x!==q).map(x=>x.a)).slice(0,4));
+ }
+ opts=shuf([q.a].concat(opts));
+ const box=$('answers');box.innerHTML='';
+ box.style.gridTemplateRows=S.cfg.n===8?'repeat(4,1fr)':'repeat(2,1fr)';
+ opts.forEach((o,k)=>{
+  const b=document.createElement('button');
+  b.className='ans c'+k;b.style.animationDelay=k*0.07+'s';
+  b.innerHTML='<i>'+SHAPES[k]+'</i><span>'+o+'</span>';
+  b.onclick=()=>answer(b,o===q.a);
+  box.appendChild(b);
+ });
+ S.locked=false;
+}
+function answer(btn,ok){
+ if(S.locked)return;S.locked=true;
+ const q=S.order[S.i];
+ document.querySelectorAll('.ans').forEach(b=>{
+  b.disabled=true;
+  if(b.textContent.slice(1)===q.a)b.classList.add('right');else b.classList.add('dim');
+ });
+ if(ok){
+  snd('correct');
+  S.cRun++;S.wRun=0;
+  const g=100*S.cRun*S.cfg.mult;
+  setTokens(tokens+g);floatText('+'+g,'g');
+  if(S.cRun%5===0){
+   const lvl=S.cRun/5;S.level=lvl;
+   $('corner').className='show';$('corner').textContent='🔥 STREAK x'+lvl;
+   if(lvl===1){ // fullskjás-animation bara fyrir fyrsta streak
+    snd('streak_gain');
+    const f=$('streakFull');f.classList.add('on');setTimeout(()=>f.classList.remove('on'),3000);
+   }
+  }
+ }else{
+  btn.classList.remove('dim');btn.classList.add('wrong');
+  snd('incorrect');
+  S.wRun++;S.cRun=0;
+  if(S.level>0){
+   setTimeout(()=>snd('streak_lose'),500);
+   $('corner').className='gone';S.level=0;
+  }
+  if(S.cfg.life){
+   setTokens(tokens/2);floatText('-50%','r');
+   setTimeout(()=>end(false,'Þú misstir líf og helminginn af táknunum!'),1300);return;
+  }
+  const l=100*S.wRun;setTokens(tokens-l);floatText('-'+l,'r');
+  if(S.cfg.time)S.time-=30;
+ }
+ setTimeout(()=>{
+  if(!S||S.over)return;
+  if(S.cfg.time&&S.time<=0){end(false,'Tíminn rann út!');return}
+  S.i++;
+  if(S.i>=S.order.length)end(true,'Þú kláraðir allar spurningarnar!');else render();
+ },1400);
+}
+function end(win,msg){
+ if(S.over)return;S.over=true;clearInterval(S.t);
+ $('endTag').textContent=win?'Sigur':'Tapað';
+ $('endTitle').textContent=win?'Vel gert!':'Því miður...';
+ $('endText').textContent=msg+' Þú átt núna '+tokens+' Eldur-tákn.';
+ show('end');
+}
+document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>start(b.dataset.m));
+</script>
+</body>
+</html>
