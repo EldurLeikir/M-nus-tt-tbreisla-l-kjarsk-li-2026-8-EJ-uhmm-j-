@@ -60,6 +60,14 @@ p{font:13px/1.7 "Courier New",monospace;color:#514945;margin:0 0 14px}
 .float{position:fixed;left:50%;top:40%;z-index:10;font:bold 40px "Courier New",monospace;pointer-events:none;animation:up 1.2s forwards;text-shadow:0 2px 6px #0006}
 .float.g{color:#ffc857}.float.r{color:#ff4b5e}
 @keyframes up{from{transform:translate(-50%,0)}to{transform:translate(-50%,-120px);opacity:0}}
+#mid{position:relative}
+#pw{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);display:flex;gap:8px}
+#pw button{font:bold 11px "Courier New",monospace;background:#fff;border:2px solid var(--wine);color:var(--wine);padding:6px 10px;cursor:pointer;transition:.2s}
+#pw button:hover:not(:disabled){background:var(--wine);color:#fff}
+#pw button:disabled{opacity:.4;cursor:default}
+#pw button.on{background:var(--gold);border-color:#b17a32;color:#3b2a00;animation:bump .5s}
+.buy{font:bold 12px "Courier New",monospace;background:var(--wine);color:#fff;border:0;padding:8px 14px;cursor:pointer;margin-top:6px}
+.buy:disabled{opacity:.4}
 button.big{font:bold 14px "Courier New",monospace;background:var(--wine);color:#fff;border:0;padding:12px 22px;cursor:pointer;margin-top:10px;transition:.2s}
 button.big:hover{transform:scale(1.07)}
 </style>
@@ -81,11 +89,20 @@ button.big:hover{transform:scale(1.07)}
   <button class="mode" data-m="timer"><b>2 · Tímaþraut</b><span>10 mínútur. Hvert rangt svar tekur 30 sek.<br>Tákn x2</span></button>
   <button class="mode" data-m="extreme"><b>3 · Öfgar</b><span>5 mínútur, 8 svarmöguleikar og eitt líf. Rangt svar eyðir 50% tákna.<br>Tákn x4</span></button>
  </div>
+ <button class="big" onclick="renderShop();show('shop')">🛒 VERSLUN</button>
+</section>
+
+<section id="shop" class="screen">
+ <div class="eyebrow">Verslun</div>
+ <h2>Powerups</h2>
+ <p>Greiddu með Eldur-táknum. Hvert powerup virkar einu sinni og þarf að kaupa aftur. Ekki leyft í Öfgar-ham.</p>
+ <div class="modes" id="shopList"></div>
+ <button class="big" onclick="show('menu')">AFTUR</button>
 </section>
 
 <section id="game" class="screen">
  <div id="qbar"></div>
- <div id="mid"><div id="timer">∞</div><img id="logo" src="eldurleikir.jpg" alt=""><div id="count"></div></div>
+ <div id="mid"><div id="timer">∞</div><img id="logo" src="eldurleikir.jpg" alt=""><div id="count"></div><div id="pw"></div></div>
  <div id="answers"></div>
 </section>
 
@@ -136,13 +153,53 @@ function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.to
 function floatText(t,cls){const f=document.createElement('div');f.className='float '+cls;f.textContent=t;document.body.appendChild(f);setTimeout(()=>f.remove(),1200)}
 const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
 
+let pw={hide:0,again:0,dbl:0};
+try{Object.assign(pw,JSON.parse(localStorage.getItem('pw')))}catch(e){}
+const savePw=()=>{try{localStorage.setItem('pw',JSON.stringify(pw))}catch(e){}};
+const PW={
+ hide:{n:'Fela rangt svar',p:300,d:'Felur eitt rangt svar í spurningunni.'},
+ again:{n:'Önnur tilraun',p:500,d:'Þú færð að svara aftur ef þú svarar rangt.'},
+ dbl:{n:'Tvöföld tákn',p:800,d:'Tvöfaldar táknin þegar þú nærð streak. Rangt svar tekur 3x meira á meðan það er virkt.'}
+};
+function renderShop(){
+ $('shopList').innerHTML='';
+ for(const k in PW){
+  const d=document.createElement('div');d.className='mode';d.style.cursor='default';
+  d.innerHTML='<b>'+PW[k].n+'</b><span>'+PW[k].d+'<br>Átt: '+pw[k]+'<br></span>';
+  const b=document.createElement('button');b.className='buy';b.textContent='KAUPA · '+PW[k].p+' tákn';
+  b.disabled=tokens<PW[k].p;
+  b.onclick=()=>{if(tokens<PW[k].p)return;setTokens(tokens-PW[k].p);pw[k]++;savePw();renderShop()};
+  d.appendChild(b);$('shopList').appendChild(d);
+ }
+}
+function renderPw(){
+ const box=$('pw');box.innerHTML='';
+ if(S.cfg.life)return;
+ for(const k in PW){
+  const b=document.createElement('button');
+  b.textContent=PW[k].n+' ('+pw[k]+')';
+  b.disabled=pw[k]<1||S[k]||S.locked;
+  if(S[k])b.classList.add('on');
+  b.onclick=()=>usePw(k);box.appendChild(b);
+ }
+}
+function usePw(k){
+ if(S.locked||pw[k]<1||S[k])return;
+ if(k==='hide'){
+  const q=S.order[S.i];
+  const w=[...document.querySelectorAll('.ans')].filter(b=>!b.disabled&&b.textContent.slice(1)!==q.a);
+  if(!w.length)return;
+  const b=w[Math.floor(Math.random()*w.length)];b.disabled=true;b.style.visibility='hidden';
+ }else S[k]=true;
+ pw[k]--;savePw();renderPw();
+}
 let S;
 function start(m){
- S={m,cfg:MODES[m],order:shuf(Q),i:0,cRun:0,wRun:0,level:0,time:MODES[m].time,locked:false,t:null};
+ S={m,cfg:MODES[m],again:false,dbl:false,order:shuf(Q),i:0,cRun:0,wRun:0,level:0,time:MODES[m].time,locked:false,t:null};
  $('corner').className='';$('corner').textContent='';
  show('game');
  if(S.cfg.time){tick();S.t=setInterval(tick,1000)}else{$('timer').textContent='∞'}
- render();
+  render();
 }
 function tick(){
  $('timer').textContent=fmt(S.time);
@@ -168,10 +225,12 @@ function render(){
   b.onclick=()=>answer(b,o===q.a);
   box.appendChild(b);
  });
- S.locked=false;
+ S.locked=false;renderPw();
 }
 function answer(btn,ok){
- if(S.locked)return;S.locked=true;
+ if(S.locked)return;
+ if(!ok&&S.again){S.again=false;btn.disabled=true;btn.classList.add('wrong');snd('incorrect');renderPw();return}
+ S.locked=true;renderPw();
  const q=S.order[S.i];
  document.querySelectorAll('.ans').forEach(b=>{
   b.disabled=true;
@@ -180,7 +239,8 @@ function answer(btn,ok){
  if(ok){
   snd('correct');
   S.cRun++;S.wRun=0;
-  const g=100*S.cRun*S.cfg.mult;
+  let g=100*S.cRun*S.cfg.mult;
+  if(S.cRun%5===0&&S.dbl){g*=2;S.dbl=false}
   setTokens(tokens+g);floatText('+'+g,'g');
   if(S.cRun%5===0){
    const lvl=S.cRun/5;S.level=lvl;
@@ -202,7 +262,9 @@ function answer(btn,ok){
    setTokens(tokens/2);floatText('-50%','r');
    setTimeout(()=>end(false,'Þú misstir líf og helminginn af táknunum!'),1300);return;
   }
-  const l=100*S.wRun;setTokens(tokens-l);floatText('-'+l,'r');
+  let l=100*S.wRun;
+  if(S.dbl){l*=3;S.dbl=false}
+ setTokens(tokens-l);floatText('-'+l,'r');
   if(S.cfg.time)S.time-=30;
  }
  setTimeout(()=>{
